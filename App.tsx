@@ -66,12 +66,16 @@ const App: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
-  // API 키 선택 여부 확인
   useEffect(() => {
     const checkKey = async () => {
       try {
-        const selected = await window.aistudio.hasSelectedApiKey();
-        setIsKeySelected(selected);
+        if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
+          const selected = await window.aistudio.hasSelectedApiKey();
+          setIsKeySelected(selected);
+        } else {
+          // If aistudio is not present (local dev), assume true to avoid blank screen
+          setIsKeySelected(true);
+        }
       } catch (e) {
         setIsKeySelected(false);
       }
@@ -80,10 +84,13 @@ const App: React.FC = () => {
   }, []);
 
   const handleOpenKeySelector = async () => {
-    try {
-      await window.aistudio.openSelectKey();
-    } catch (e) {}
-    setIsKeySelected(true); // 레이스 컨디션 방지: 즉시 진입 허용
+    if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
+      try {
+        await window.aistudio.openSelectKey();
+      } catch (e) {}
+    }
+    // Race condition mitigation: Proceed to app regardless
+    setIsKeySelected(true);
   };
 
   useEffect(() => {
@@ -176,14 +183,14 @@ const App: React.FC = () => {
     const hasRef = !!referenceImage;
     setVisualLoadMessage(
       type === 'image' 
-        ? (hasRef ? '20년 베테랑 디자이너가 레퍼런스의 피사체를 정밀 분석하여 웅장한 대자연 풍경을 합성 중입니다...' : '베테랑 디자이너가 최적의 배경을 생성 중입니다...')
-        : (hasRef ? '레퍼런스 이미지의 영웅적 구도를 기반으로 시네마틱 무브먼트를 부여하고 있습니다...' : 'AI가 웅장한 시네마틱 영상을 렌더링 중입니다. 약 1분 정도 소요됩니다.')
+        ? (hasRef ? '20년 베테랑 디자이너가 레퍼런스 구도를 분석하여 웅장한 대자연 걸작을 생성 중입니다...' : '베테랑 디자이너가 최적의 배경을 생성 중입니다...')
+        : (hasRef ? '이미지의 주인공을 감지하여 시네마틱한 무브먼트를 부여하고 있습니다...' : 'AI가 웅장한 시네마틱 영상을 렌더링 중입니다. 약 1분 정도 소요됩니다.')
     );
     
     try {
       if (type === 'video') {
         const videoUrl = await generateCardVideo(
-          imageType === '자연' ? `Pure Majestic Nature: ${content.bgTheme}` : content.bgTheme,
+          imageType === '자연' ? `Pure Nature Wilderness: ${content.bgTheme}` : content.bgTheme,
           designRequirement,
           referenceImage || undefined,
           detectedRatio === '9:16' ? '9:16' : '16:9',
@@ -292,7 +299,6 @@ const App: React.FC = () => {
     };
   }, [currentMessage, selectedFont, isItalic, isBold, textAlign, fontSizeScale, letterSpacingScale, lineHeightScale, textColor, textOpacity, textShadowIntensity, textShadowColor]);
 
-  // 키 미선택 시 랜딩 페이지
   if (isKeySelected === false) {
     return (
       <div className="min-h-screen bg-[#010206] flex flex-col items-center justify-center p-6 text-center">
@@ -318,7 +324,6 @@ const App: React.FC = () => {
     );
   }
 
-  // 로딩 플레이스홀더 (블랙 스크린 방지)
   if (isKeySelected === null) {
     return (
       <div className="min-h-screen bg-[#010206] flex items-center justify-center">
@@ -358,7 +363,7 @@ const App: React.FC = () => {
             <div className="space-y-6">
               {mainTab === 'greeting' ? (
                 <div className="space-y-6 animate-in fade-in duration-500">
-                  <div className="space-y-3"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">메시지 스타일</label><div className="grid grid-cols-3 gap-2">{(['강력', '따뜻함', '심플'] as const).map(s => <button key={s} onClick={() => setMessageStyle(s)} className={`py-2.5 text-[10px] font-black rounded-xl border border-white/5 transition-all ${messageStyle === s ? 'bg-white/10 text-amber-500 border-amber-500/50' : 'bg-black/20 text-white/20 hover:text-white/40'}`}>{s}</button>)}</div></div>
+                  <div className="space-y-3"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">메시지 스타일</label><div className="grid grid-cols-3 gap-2">{(['에너지', '따뜻함', '심플'] as const).map(s => <button key={s} onClick={() => setMessageStyle(s as any)} className={`py-2.5 text-[10px] font-black rounded-xl border border-white/5 transition-all ${messageStyle === s ? 'bg-white/10 text-amber-500 border-amber-500/50' : 'bg-black/20 text-white/20 hover:text-white/40'}`}>{s}</button>)}</div></div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">받는 분</label><select value={target} onChange={(e) => setTarget(e.target.value as any)} className="w-full p-3.5 bg-black/60 border border-white/10 rounded-xl text-[10px] font-bold text-white outline-none focus:border-amber-500">{TARGETS.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
                     <div className="space-y-2"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">상황 설정</label><select value={situation} onChange={(e) => setSituation(e.target.value as any)} className="w-full p-3.5 bg-black/60 border border-white/10 rounded-xl text-[10px] font-bold text-white outline-none focus:border-amber-500">{SITUATIONS.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
@@ -366,14 +371,14 @@ const App: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-6 animate-in fade-in duration-500">
-                  <div className="space-y-3"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">명언 주제</label><div className="grid grid-cols-3 gap-2">{(['리더십', '행동', '위로', '감사', '결단'] as const).map(q => <button key={q} onClick={() => setQuoteTheme(q)} className={`py-2.5 text-[10px] font-black rounded-xl border border-white/5 transition-all ${quoteTheme === q ? 'bg-white/10 text-amber-500 border-amber-500/50' : 'bg-black/20 text-white/20 hover:text-white/40'}`}>{q}</button>)}</div></div>
+                  <div className="space-y-3"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">명언 주제</label><div className="grid grid-cols-3 gap-2">{(['리더십', '행동', '위로', '감사', '결단'] as const).map(q => <button key={q} onClick={() => setQuoteTheme(q as any)} className={`py-2.5 text-[10px] font-black rounded-xl border border-white/5 transition-all ${quoteTheme === q ? 'bg-white/10 text-amber-500 border-amber-500/50' : 'bg-black/20 text-white/20 hover:text-white/40'}`}>{q}</button>)}</div></div>
                   <button onClick={handleFetchQuotes} disabled={isQuoteFetching} className="w-full py-3.5 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-amber-500 flex items-center justify-center gap-3 shadow-lg">{isQuoteFetching && <div className="w-3 h-3 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />}명언 생성 (5개 랜덤 추출)</button>
                   {quoteOptions.length > 0 && <div className="space-y-2 max-h-64 overflow-y-auto pr-1 no-scrollbar border-t border-white/5 pt-4"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">명언 셀렉션</label>{quoteOptions.map((opt, idx) => <div key={idx} onClick={() => setSelectedQuote(opt)} className={`p-4 rounded-2xl border cursor-pointer transition-all text-[11px] leading-relaxed ${selectedQuote === opt ? 'bg-amber-500 text-black border-transparent shadow-xl' : 'bg-black/40 text-white/60 border-white/5 hover:border-white/20'}`}>"{opt.text}" <br/><span className="opacity-70 text-[10px] font-black mt-2 block">- {opt.author}</span></div>)}</div>}
                 </div>
               )}
               <div className="space-y-4 pt-2 border-t border-white/5">
                 <div className="space-y-2"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">작성자(본인)</label><input value={senderName} onChange={(e) => setSenderName(e.target.value)} placeholder="성함 입력" className="w-full p-4 bg-black/60 border border-white/10 rounded-xl text-xs font-bold outline-none focus:border-amber-500 text-white shadow-inner" /></div>
-                <textarea value={userRequirement} onChange={(e) => setUserRequirement(e.target.value)} placeholder="베테랑 디자이너에게 전하는 추가 요청" className="w-full p-5 bg-black/60 border border-white/10 rounded-2xl h-24 text-xs resize-none outline-none focus:border-amber-500 text-white/80 shadow-inner" />
+                <textarea value={userRequirement} onChange={(e) => setUserRequirement(e.target.value)} placeholder="추가 요청 사항 (예: 일출 배경, 더 웅장하게)" className="w-full p-5 bg-black/60 border border-white/10 rounded-2xl h-24 text-xs resize-none outline-none focus:border-amber-500 text-white/80 shadow-inner" />
                 <div className="pt-4 flex flex-col gap-3">
                   <button 
                     onClick={handleGenerateCard} 
@@ -381,7 +386,7 @@ const App: React.FC = () => {
                     className="w-full py-5 bg-gradient-to-r from-amber-600 to-amber-400 text-black text-sm font-black rounded-2xl shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-30"
                   >
                     {isLoading ? <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : null}
-                    카드 문구 디자인하기
+                    메시지 디자인하기
                   </button>
                 </div>
               </div>
@@ -402,33 +407,25 @@ const App: React.FC = () => {
                     <div className="relative w-full h-full p-1 bg-black/40 rounded-2xl">
                       <img src={referenceImage} alt="Ref" className="w-full h-full object-contain" />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 rounded-2xl">
-                        <span className="text-[9px] font-black text-cyan-400 tracking-widest uppercase bg-black/80 px-4 py-2 rounded-full border border-cyan-400/30">REF ANALYSIS READY</span>
+                        <span className="text-[9px] font-black text-cyan-400 tracking-widest uppercase bg-black/80 px-4 py-2 rounded-full border border-cyan-400/30">이미지 교체</span>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center p-4">
-                      <span className="text-[10px] text-white/30 font-black uppercase tracking-widest block">레퍼런스 업로드/복붙</span>
-                      <span className="text-[8px] text-white/10 italic">20년 베테랑이 구도를 분석합니다</span>
+                      <span className="text-[10px] text-white/30 font-black uppercase tracking-widest block">레퍼런스 분석</span>
+                      <span className="text-[8px] text-white/10 italic">이미지 업로드 또는 Ctrl+V</span>
                     </div>
                   )}
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onloadend = () => { setReferenceImage(reader.result as string); calculateAspectRatio(reader.result as string); }; reader.readAsDataURL(file); } }} />
                 </div>
-                {referenceImage && (
-                  <button 
-                    onClick={() => setReferenceImage(null)} 
-                    className="w-12 h-32 bg-red-500/10 border border-red-500/30 rounded-3xl flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-lg"
-                  >
-                    <span className="text-[8px] font-black uppercase tracking-tighter [writing-mode:vertical-lr] rotate-180">RESET</span>
-                  </button>
-                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">배경 테마</label><select value={imageType} onChange={(e) => setImageType(e.target.value as any)} className="w-full p-3 bg-black/60 border border-white/10 rounded-xl text-[10px] font-bold text-white outline-none focus:border-cyan-500">{IMAGE_TYPES.map(type => <option key={type} value={type}>{type}</option>)}</select></div>
                 <div className="space-y-2"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">아트 스타일</label><select value={imageStylePreset} onChange={(e) => setImageStylePreset(e.target.value as any)} className="w-full p-3 bg-black/60 border border-white/10 rounded-xl text-[10px] font-bold text-white outline-none focus:border-cyan-500">{IMAGE_STYLE_PRESETS.map(preset => <option key={preset} value={preset}>{preset}</option>)}</select></div>
               </div>
               <div className="grid grid-cols-1 gap-3">
-                <button onClick={() => handleGenerateVisual('image')} disabled={isVisualLoading} className="w-full py-4 bg-cyan-500 text-black text-[10px] font-black rounded-2xl hover:bg-cyan-400 transition-all shadow-xl flex items-center justify-center gap-2">{isVisualLoading ? <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : null}AI 시네마틱 배경 생성</button>
-                <button onClick={() => handleGenerateVisual('video')} disabled={isVisualLoading} className="w-full py-4 border border-cyan-500 text-cyan-500 text-[10px] font-black rounded-2xl hover:bg-cyan-500 hover:text-black transition-all shadow-xl flex items-center justify-center gap-2">멋진 비주얼 영상 생성</button>
+                <button onClick={() => handleGenerateVisual('image')} disabled={isVisualLoading} className="w-full py-4 bg-cyan-500 text-black text-[10px] font-black rounded-2xl hover:bg-cyan-400 transition-all shadow-xl flex items-center justify-center gap-2">{isVisualLoading ? <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : null}배경 이미지 생성</button>
+                <button onClick={() => handleGenerateVisual('video')} disabled={isVisualLoading} className="w-full py-4 border border-cyan-500 text-cyan-500 text-[10px] font-black rounded-2xl hover:bg-cyan-500 hover:text-black transition-all shadow-xl flex items-center justify-center gap-2">시네마틱 영상 생성</button>
               </div>
               {isVisualLoading && <p className="text-[9px] text-cyan-400 animate-pulse text-center font-bold px-4 leading-relaxed">{visualLoadMessage}</p>}
             </div>
@@ -461,36 +458,36 @@ const App: React.FC = () => {
               <div className="bg-[#0b0d12] p-6 md:p-12 rounded-[50px] border border-white/5 space-y-12 shadow-2xl relative">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <div className="space-y-4 bg-white/[0.02] p-6 rounded-[35px] border border-white/5">
-                    <label className="text-[10px] font-black text-cyan-400 uppercase tracking-widest ml-1">디자인 세부 피드백</label>
-                    <div className="flex gap-2 items-center"><input value={refinementText} onChange={(e) => setRefinementText(e.target.value)} placeholder="예: 구도를 아래로, 피사체 크기 확대" className="flex-1 bg-black/80 border border-white/10 rounded-2xl px-5 py-3.5 text-xs outline-none focus:border-cyan-500 font-bold transition-colors min-w-0" /><button onClick={() => handleGenerateVisual('image', true)} disabled={isVisualLoading} className="flex-shrink-0 px-6 py-3.5 bg-cyan-500 text-black text-[11px] font-black rounded-2xl active:scale-95 transition-all shadow-lg hover:bg-cyan-400 whitespace-nowrap">반영</button></div>
+                    <label className="text-[10px] font-black text-cyan-400 uppercase tracking-widest ml-1">디테일 수정 요청</label>
+                    <div className="flex gap-2 items-center"><input value={refinementText} onChange={(e) => setRefinementText(e.target.value)} placeholder="예: 구도를 아래로, 피사체 확대" className="flex-1 bg-black/80 border border-white/10 rounded-2xl px-5 py-3.5 text-xs outline-none focus:border-cyan-500 font-bold transition-colors min-w-0" /><button onClick={() => handleGenerateVisual('image', true)} disabled={isVisualLoading} className="flex-shrink-0 px-6 py-3.5 bg-cyan-500 text-black text-[11px] font-black rounded-2xl active:scale-95 transition-all shadow-lg hover:bg-cyan-400 whitespace-nowrap">반영</button></div>
                   </div>
                   <div className="space-y-4 bg-white/[0.02] p-6 rounded-[35px] border border-white/5">
-                    <label className="text-[10px] font-black text-amber-500/50 uppercase tracking-widest ml-1">시그니처 프레임워크</label>
+                    <label className="text-[10px] font-black text-amber-500/50 uppercase tracking-widest ml-1">시그니처 프레임</label>
                     <div className="grid grid-cols-2 gap-3 w-full"><select value={selectedLayoutFrame} onChange={(e) => setSelectedLayoutFrame(e.target.value as any)} className="w-full px-4 py-3.5 bg-black/80 border border-white/10 rounded-2xl text-[10px] text-white outline-none font-black hover:border-amber-500 appearance-none text-center">{LAYOUT_FRAMES.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}</select><select value={selectedTextFrame} onChange={(e) => setSelectedTextFrame(e.target.value as any)} className="w-full px-4 py-3.5 bg-black/80 border border-white/10 rounded-2xl text-[10px] text-white outline-none font-black hover:border-amber-500 appearance-none text-center">{TEXT_FRAMES.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}</select></div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                   <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Color & Contrast</h4>
+                    <h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Color & Design</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-[9px] text-white/30 uppercase">텍스트</label>
+                        <label className="text-[9px] text-white/30 uppercase">텍스트 컬러</label>
                         <input type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)} className="w-full h-12 bg-black border border-white/10 rounded-2xl cursor-pointer" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[9px] text-white/30 uppercase">프레임</label>
+                        <label className="text-[9px] text-white/30 uppercase">프레임 컬러</label>
                         <input type="color" value={frameColor} onChange={(e) => setFrameColor(e.target.value)} className="w-full h-12 bg-black border border-white/10 rounded-2xl cursor-pointer" />
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-6"><h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Font Selection</h4><select value={selectedFont} onChange={(e) => setSelectedFont(e.target.value)} className="w-full p-4 bg-black border border-white/10 rounded-2xl text-xs text-white font-black shadow-inner focus:border-white/30 outline-none">{KOREAN_FONTS.map(f => <option key={f.category + f.name} value={f.value}>{f.name}</option>)}{ENGLISH_FONTS.map(f => <option key={f.category + f.name} value={f.value}>{f.name}</option>)}</select><div className="flex gap-2"><div className="flex-1 grid grid-cols-3 bg-black rounded-2xl border border-white/10 p-1">{(['left', 'center', 'right'] as const).map(a => <button key={a} onClick={() => setTextAlign(a)} className={`py-2 text-[10px] font-black rounded-xl transition-all ${textAlign === a ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}>{a.toUpperCase()}</button>)}</div><button onClick={() => setIsBold(!isBold)} className={`w-12 py-3 text-[10px] font-black rounded-2xl border border-white/10 transition-all ${isBold ? 'bg-white text-black' : 'text-white/20 hover:text-white'}`}>B</button></div></div>
-                  <div className="space-y-6"><h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Typography Scale</h4><div className="space-y-5 bg-black/30 p-5 rounded-3xl border border-white/5 shadow-inner"><div className="space-y-2"><div className="flex justify-between text-[8px] opacity-40 uppercase"><span>크기</span><span>{Math.round(fontSizeScale*100)}%</span></div><input type="range" min="0.5" max="2.0" step="0.05" value={fontSizeScale} onChange={(e) => setFontSizeScale(parseFloat(e.target.value))} className="w-full" /></div><div className="space-y-2"><div className="flex justify-between text-[8px] opacity-40 uppercase"><span>행간</span><span>{lineHeightScale}x</span></div><input type="range" min="0.5" max="3.0" step="0.1" value={lineHeightScale} onChange={(e) => setLineHeightScale(parseFloat(e.target.value))} className="w-full" /></div></div></div>
+                  <div className="space-y-6"><h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Font Choice</h4><select value={selectedFont} onChange={(e) => setSelectedFont(e.target.value)} className="w-full p-4 bg-black border border-white/10 rounded-2xl text-xs text-white font-black shadow-inner focus:border-white/30 outline-none">{KOREAN_FONTS.map(f => <option key={f.category + f.name} value={f.value}>{f.name}</option>)}{ENGLISH_FONTS.map(f => <option key={f.category + f.name} value={f.value}>{f.name}</option>)}</select><div className="flex gap-2"><div className="flex-1 grid grid-cols-3 bg-black rounded-2xl border border-white/10 p-1">{(['left', 'center', 'right'] as const).map(a => <button key={a} onClick={() => setTextAlign(a)} className={`py-2 text-[10px] font-black rounded-xl transition-all ${textAlign === a ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}>{a.toUpperCase()}</button>)}</div><button onClick={() => setIsBold(!isBold)} className={`w-12 py-3 text-[10px] font-black rounded-2xl border border-white/10 transition-all ${isBold ? 'bg-white text-black' : 'text-white/20 hover:text-white'}`}>B</button></div></div>
+                  <div className="space-y-6"><h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Scale Control</h4><div className="space-y-5 bg-black/30 p-5 rounded-3xl border border-white/5 shadow-inner"><div className="space-y-2"><div className="flex justify-between text-[8px] opacity-40 uppercase"><span>폰트 크기</span><span>{Math.round(fontSizeScale*100)}%</span></div><input type="range" min="0.5" max="2.0" step="0.05" value={fontSizeScale} onChange={(e) => setFontSizeScale(parseFloat(e.target.value))} className="w-full" /></div><div className="space-y-2"><div className="flex justify-between text-[8px] opacity-40 uppercase"><span>행간 조절</span><span>{lineHeightScale}x</span></div><input type="range" min="0.5" max="3.0" step="0.1" value={lineHeightScale} onChange={(e) => setLineHeightScale(parseFloat(e.target.value))} className="w-full" /></div></div></div>
                 </div>
 
                 <div className="space-y-4 pt-10 border-t border-white/5 relative">
-                  <div className="relative rounded-[50px] bg-black/90 p-2 border border-white/5 shadow-3xl overflow-hidden min-h-[400px]"><textarea ref={editorRef} value={currentMessage} onChange={(e) => setCurrentMessage(e.target.value)} className="w-full bg-transparent resize-none outline-none transition-all duration-300 overflow-hidden block scroll-smooth no-scrollbar" style={typographyStyles} spellCheck={false} placeholder="메시지를 수정하면 전문가의 배치가 실시간으로 적용됩니다..." /></div>
+                  <div className="relative rounded-[50px] bg-black/90 p-2 border border-white/5 shadow-3xl overflow-hidden min-h-[400px]"><textarea ref={editorRef} value={currentMessage} onChange={(e) => setCurrentMessage(e.target.value)} className="w-full bg-transparent resize-none outline-none transition-all duration-300 overflow-hidden block scroll-smooth no-scrollbar" style={typographyStyles} spellCheck={false} placeholder="메시지 수정 시 전문가의 오토-레이아웃이 즉시 적용됩니다..." /></div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-10"><button onClick={handleDownload} className="py-6 bg-gradient-to-r from-amber-600 to-amber-200 text-black font-black uppercase tracking-[0.6em] text-xs rounded-3xl shadow-2xl active:scale-[0.98] transition-all hover:brightness-110">High-Res Download</button><button onClick={handleShare} className="py-6 border border-white/10 text-white font-black uppercase tracking-[0.4em] text-[10px] rounded-3xl hover:bg-white/5 active:scale-[0.98] transition-all">스마트 공유하기</button></div>
                 </div>
               </div>
@@ -498,7 +495,7 @@ const App: React.FC = () => {
           )}
         </section>
       </main>
-      <footer className="py-20 px-10 border-t border-white/5 text-center opacity-10 select-none font-black tracking-[1.5em] uppercase leading-relaxed italic">Biz Master AI Studio • Signature Typography Engine v4.5</footer>
+      <footer className="py-20 px-10 border-t border-white/5 text-center opacity-10 select-none font-black tracking-[1.5em] uppercase leading-relaxed italic">Biz Master AI Studio • Signature Typography Engine v4.6</footer>
     </div>
   );
 };

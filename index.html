@@ -14,11 +14,12 @@
             background-color: #02040a;
             color: #f8fafc;
             overflow-x: hidden;
+            margin: 0;
+            padding: 0;
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         input[type="range"] { accent-color: #f59e0b; }
-        .font-preview { padding: 4px; border-radius: 4px; }
     </style>
 <script type="importmap">
 {
@@ -33,5 +34,6 @@
 </head>
 <body>
     <div id="root"></div>
+    <script type="module" src="index.tsx"></script>
 </body>
 </html>
