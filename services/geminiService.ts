@@ -106,36 +106,30 @@ export const generateCardImage = async (
   const promptText = `
     [ACT AS A WORLD-CLASS SENIOR ART DIRECTOR WITH 20 YEARS OF EXPERIENCE]
     
-    TASK: Create a signature background for a high-end greeting card.
-    
-    1. IMAGE TYPE: The user has selected "${imageType}". 
-       - IF "${imageType}" IS "Nature": YOU MUST CREATE A PURE, UNTOUCHED WILDERNESS. 
-       - ABSOLUTE BAN: No buildings, no houses, no roads, no fences, no streetlights, no modern objects. 
-       - ESSENCE: Epic natural beauty only. Pristine mountains, vast valleys, untamed forests, misty waterfalls.
+    1. THEME ANALYSIS: The user has selected "${imageType}". 
+       - IF "${imageType}" IS "자연(Nature)": YOU MUST GENERATE A PURE WILDERNESS MASTERPIECE. 
+       - ABSOLUTELY PROHIBITED: No buildings, no houses, no modern roads, no fences, no street lamps, no human-made structures. 
+       - ELEMENTS: High peaks, misty valleys, rising sun, epic waterfalls, wild flora.
 
-    2. REFERENCE ANALYSIS (IF PROVIDED):
+    2. REFERENCE IMAGE ANALYSIS & SYNTHESIS:
        ${referenceImage ? `
-       - ANALYZE the reference image thoroughly.
-       - IDENTIFY the main subject (e.g., an animal like a horse, a bird, or a specific silhouette).
-       - EXTRACT the pose and energy. (Example: If there's a horse, keep its dynamic rearing pose).
-       - SYNTHESIZE: Place this hero subject into the grand "${imageType}" landscape.
-       - EXAMPLE DESIGN: A majestic horse rearing up on a high mountain ridge, silhouetted against a spectacular sunrise breaking through peaks.
-       - PERSPECTIVE: Maintain the powerful composition and focal length from the reference.
-       ` : "Design an epic symbolic landscape that represents the themes: " + theme}
+       - ANALYZE the reference image's main subject (e.g., a horse, an animal, a silhouette).
+       - EXTRACT the heroic essence and pose of that subject.
+       - REIMAGINE: Place this subject into a grand natural environment based on "${theme}".
+       - EXAMPLE: If there's a horse, show it rearing up heroically on a mountain ridge with a spectacular sunrise breaking through clouds.
+       - COMPOSITION: Match the dynamic framing and focal point of the reference image.
+       ` : "Create a grand symbolic landscape that reflects the message context: " + messageContext}
 
     3. VISUAL STYLE:
        - Style: ${imageStylePreset || "Cinematic Masterpiece"}.
-       - Theme: ${theme}.
-       - Instruction: ${designRequirement}.
-       - Context: ${messageContext || ""}.
-       - Lighting: Masterful use of "God Rays", volumetric fog, and golden-hour radiance to create a "Signature Presence".
-
-    4. COMPOSITION & QUALITY:
-       - Ensure plenty of "Negative Space" for professional typography overlay.
-       - 8K resolution feel, high dynamic range, breathtaking aesthetic.
-       - NO TEXT, NO LOGOS, NO WATERMARKS.
+       - Atmosphere: Use dramatic lighting like "God Rays", "Golden Hour", or "Volumetric Fog".
+       - Quality: 8K resolution feel, high dynamic range, breathtaking cinematic depth.
     
-    ${refinementText ? `Specific Refinement: ${refinementText}.` : ""}
+    4. DESIGN FINALIZATION:
+       - Ensure significant "Negative Space" for clean typography.
+       - REMOVE ALL TEXT, LOGOS, PEOPLE, AND WATERMARKS.
+    
+    ${refinementText ? `Artist's refinement feedback: ${refinementText}.` : ""}
   `;
 
   const contents: any = { parts: [{ text: promptText }] };
@@ -167,21 +161,20 @@ export const generateCardVideo = async (
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const promptText = `
-    [20-YEAR VETERAN ART DIRECTOR - CINEMATIC VIDEO MASTERPIECE]
+    [20-YEAR VETERAN ART DIRECTOR - CINEMATIC VIDEO DIRECTION]
     
     - THEME: ${theme}.
-    - CONTEXT: "${messageContext}".
-    - TYPE: Pure Nature (Absolutely no buildings or human-made structures if Nature is selected).
+    - TYPE: Pure Nature (Absolutely avoid buildings/structures if Nature is selected).
     
     ${referenceImage ? `
-    - CORE ANALYSIS: Detect the hero subject from the reference image (e.g., an animal, a mountain shape).
-    - TRANSFORMATION: Bring the static reference to life as a living painting.
-    - MOTION: Heroic and slow. E.g., a horse's mane blowing in the wind as it stands on a cliff under a rising sun.
-    - COMPOSITION: Keep the same powerful camera angle and dramatic framing.
-    ` : "Create an epic, moving nature landscape with deep atmosphere."}
+    - SUBJECT ANALYSIS: Identify the hero subject from the reference image.
+    - DYNAMIC LIFE: Transform the static reference into a living masterpiece.
+    - MOVEMENT: Heroic, slow-motion. E.g., a horse rearing against a misty sunrise, mane flowing.
+    - COMPOSITION: Preserve the powerful camera angle and framing of the reference.
+    ` : "Create an epic, moving nature landscape that captures the message: " + messageContext}
     
-    - LIGHTING: Ethereal sunlight transitions, moving clouds, and cinematic depth.
-    - QUALITY: High dynamic range, professional color grading, NO TEXT.
+    - LIGHTING: Cinematic light transitions and atmospheric depth.
+    - NO TEXT, NO PEOPLE, NO MODERN ARTIFACTS.
   `;
 
   const videoConfig: any = {
