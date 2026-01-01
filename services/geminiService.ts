@@ -104,25 +104,35 @@ export const generateCardImage = async (
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const promptText = `
-    Create a high-end cinematic background.
-    Background Theme: ${theme}. 
-    Context: ${messageContext || ""}.
-    Style: ${imageStylePreset || "Cinematic"} ${imageType || "Nature"}.
-    Visual Direction: ${designRequirement}.
+    AS A MASTER DESIGNER WITH 20 YEARS OF EXPERIENCE:
     
-    ${referenceImage ? `
-    [20-YEAR VETERAN DESIGNER INSTRUCTION: REFERENCE ANALYSIS & SYNTHESIS]
-    1. SUBJECT EXTRACTION: Carefully analyze the main subject in the provided reference image (e.g., an animal like a horse, a specific shape, or a human figure).
-    2. THEMATIC INTEGRATION: Synthesize this subject into the target environment: "${imageType}: ${theme}".
-    3. PURE NATURE RULE: If the type is "Nature", the output MUST be a pure wilderness. ABSOLUTELY NO buildings, artificial structures, or modern roads unless explicitly requested.
-    4. COMPOSITION MAPPING: Maintain the core layout and focal point of the reference but reimagine it as a masterpiece.
-    5. EPIC LIGHTING: Integrate cinematic lighting (e.g., a majestic sunrise between peaks, golden hour) that harmonizes the subject with the landscape.
-    6. EXAMPLE SCENARIO: If the reference has a horse, place it heroically on a mountain ridge with a spectacular sun rising behind it.
-    ` : "Generate a new high-end cinematic masterpiece from scratch."}
+    1. IMAGE TYPE ANALYSIS: The user has selected "${imageType}". 
+       - IF "${imageType}" IS "Nature": YOU MUST GENERATE A PURE WILDERNESS MASTERPIECE. 
+       - ABSOLUTELY PROHIBITED: No buildings, no man-made roads, no street lamps, no fences, no modern structures. 
+       - ELEMENTS TO USE: Epic mountains, vast oceans, ancient forests, mist, sun rays, and majestic skies.
+
+    2. REFERENCE SUBJECT SYNTHESIS:
+       ${referenceImage ? `
+       - ANALYZE the reference image's main subject (e.g., a horse, a bird, a figure).
+       - EXTRACT the silhouette and heroic essence of that subject.
+       - REIMAGINE the subject in a grand, cinematic nature setting. 
+       - EXAMPLE: If a horse is present, show it rearing up heroically on a misty mountain ridge at sunrise.
+       - MATCH THE COMPOSITION: Use the same dynamic angle and focal points from the reference.
+       ` : "Create a grand, symbolic landscape that matches the message context."}
+
+    3. STYLE & LIGHTING:
+       - Style: ${imageStylePreset || "Cinematic Masterpiece"}.
+       - Theme: ${theme}.
+       - Visual Direction: ${designRequirement}.
+       - Context: ${messageContext || ""}.
+       - Lighting: Use "God Rays", "Golden Hour", or "Dramatic Backlighting" to create a signature presence.
+
+    4. FINAL QUALITY:
+       - Pristine, text-free, professional high-end background.
+       - High contrast and deep emotional resonance.
+       - Balanced negative space for typography.
     
-    ${refinementText ? `Fine-tune: ${refinementText}.` : ""}
-    
-    CRITICAL: REMOVE ALL TEXT, LOGOS, AND PEOPLE. Pure visual art only.
+    ${refinementText ? `Artist's refinement feedback: ${refinementText}.` : ""}
   `;
 
   const contents: any = { parts: [{ text: promptText }] };
@@ -154,20 +164,21 @@ export const generateCardVideo = async (
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const promptText = `
-    A high-end cinematic 4K video for a professional greeting. 
-    Theme: ${theme}.
-    Narrative Context: Based on "${messageContext}".
+    20-YEAR VETERAN DESIGNER - CINEMATIC VIDEO DIRECTION:
+    
+    - THEME: ${theme}.
+    - CONTEXT: "${messageContext}".
+    - TYPE: Pure Nature (if Nature is selected, strictly avoid buildings and man-made structures).
     
     ${referenceImage ? `
-    [20-YEAR VETERAN DESIGNER INSTRUCTION: DYNAMIC REMASTERING]
-    - ANALYZE: Identify the core subject (e.g., horse, dragon, eagle) and composition from the reference image.
-    - EVOLVE: Transform this into a living, moving masterpiece.
-    - NATURE FOCUS: If the context is nature, ensure a PURE WILDERNESS background. NO human structures.
-    - MOTION: Subtle, heroic movement. E.g., a horse rearing its head against a backdrop of a rising sun and misty mountains.
-    - LIGHTING: Ethereal, cinematic light transitions.
-    ` : "Create a cinematic nature scene from scratch that captures the soul of the message."}
+    - SUBJECT ANALYSIS: Identify the hero object/creature in the reference.
+    - DYNAMIC EVOLUTION: Bring the reference to life. If it's a horse, animate it rearing up against a sunrise. 
+    - COMPOSITION: Keep the same powerful camera angle and framing.
+    ` : "Create an epic, moving nature landscape."}
     
-    NO TEXT, NO PEOPLE, NO DISTRACTIONS.
+    - MOTION: Slow, elegant, and majestic camera movements.
+    - LIGHTING: Ethereal and transitioning with the season/time of day.
+    - NO TEXT, NO PEOPLE, NO MODERN ARTIFACTS.
   `;
 
   const videoConfig: any = {
