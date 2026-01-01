@@ -74,7 +74,7 @@ const App: React.FC = () => {
           const selected = await window.aistudio.hasSelectedApiKey();
           setIsKeySelected(selected);
         } else {
-          // 로컬 개발 환경 또는 특수 환경 대응
+          // 로컬 개발 환경 대응
           setIsKeySelected(true);
         }
       } catch (e) {
@@ -93,7 +93,7 @@ const App: React.FC = () => {
         console.error("Key selection failed", e);
       }
     }
-    // 선택 후 레이스 컨디션을 방지하기 위해 즉시 메인 앱으로 진입 허용
+    // 선택 프로세스 트리거 후 즉시 메인 앱으로 진입 허용 (레이스 컨디션 방지)
     setIsKeySelected(true);
   };
 
@@ -303,7 +303,7 @@ const App: React.FC = () => {
     };
   }, [currentMessage, selectedFont, isItalic, isBold, textAlign, fontSizeScale, letterSpacingScale, lineHeightScale, textColor, textOpacity, textShadowIntensity, textShadowColor]);
 
-  // 최초 오픈 시 API 키 등록 랜딩 페이지
+  // 최초 오픈 시 API 키 등록 랜딩 페이지 (첫 화면 연결)
   if (isKeySelected === false) {
     return (
       <div className="min-h-screen bg-[#010206] flex flex-col items-center justify-center p-6 text-center">
@@ -355,7 +355,6 @@ const App: React.FC = () => {
           <h1 className="text-sm md:text-base font-black tracking-widest uppercase">비즈 마스터 <span className="text-amber-500">시그니처 Lab</span></h1>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={() => window.aistudio.openSelectKey()} className="text-[9px] text-white/20 uppercase tracking-widest hover:text-white transition-colors mr-4">API 키 관리</button>
           {content && (
             <button onClick={handleShare} className="px-5 py-2.5 bg-white/10 border border-white/10 rounded-full text-[10px] font-black hover:bg-white hover:text-black transition-all">스마트 공유</button>
           )}
@@ -510,7 +509,7 @@ const App: React.FC = () => {
           )}
         </section>
       </main>
-      <footer className="py-20 px-10 border-t border-white/5 text-center opacity-10 select-none font-black tracking-[1.5em] uppercase leading-relaxed italic">Biz Master AI Studio • Signature Typography Engine v4.8</footer>
+      <footer className="py-20 px-10 border-t border-white/5 text-center opacity-10 select-none font-black tracking-[1.5em] uppercase leading-relaxed italic">Biz Master AI Studio • Signature Typography Engine v4.9</footer>
     </div>
   );
 };
