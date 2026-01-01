@@ -73,10 +73,11 @@ const App: React.FC = () => {
           const selected = await window.aistudio.hasSelectedApiKey();
           setIsKeySelected(selected);
         } else {
-          // If aistudio is not present (local dev), assume true to avoid blank screen
+          // Fallback if the environment is different, assume key is available through env
           setIsKeySelected(true);
         }
       } catch (e) {
+        console.error("Key selection check failed", e);
         setIsKeySelected(false);
       }
     };
@@ -87,9 +88,11 @@ const App: React.FC = () => {
     if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
       try {
         await window.aistudio.openSelectKey();
-      } catch (e) {}
+      } catch (e) {
+        console.error("Key selector error", e);
+      }
     }
-    // Race condition mitigation: Proceed to app regardless
+    // Proceed to the app immediately after triggering the dialog to avoid race conditions
     setIsKeySelected(true);
   };
 
@@ -167,7 +170,7 @@ const App: React.FC = () => {
       if (result.recommendedSeason) setDesignRequirement(result.recommendedSeason);
       setTextAlign('center'); 
     } catch (error) {
-      alert("카드 생성 도중 오류가 발생했습니다.");
+      alert("메시지 디자인 도중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -183,14 +186,14 @@ const App: React.FC = () => {
     const hasRef = !!referenceImage;
     setVisualLoadMessage(
       type === 'image' 
-        ? (hasRef ? '20년 베테랑 디자이너가 레퍼런스 구도를 분석하여 웅장한 대자연 걸작을 생성 중입니다...' : '베테랑 디자이너가 최적의 배경을 생성 중입니다...')
+        ? (hasRef ? '20년 베테랑 디자이너가 레퍼런스 이미지의 영웅적 구도를 분석하여 웅장한 대자연 속에 합성 중입니다...' : '베테랑 디자이너가 최적의 배경을 생성 중입니다...')
         : (hasRef ? '이미지의 주인공을 감지하여 시네마틱한 무브먼트를 부여하고 있습니다...' : 'AI가 웅장한 시네마틱 영상을 렌더링 중입니다. 약 1분 정도 소요됩니다.')
     );
     
     try {
       if (type === 'video') {
         const videoUrl = await generateCardVideo(
-          imageType === '자연' ? `Pure Nature Wilderness: ${content.bgTheme}` : content.bgTheme,
+          imageType === '자연' ? `Pure Majestic Wilderness: ${content.bgTheme}` : content.bgTheme,
           designRequirement,
           referenceImage || undefined,
           detectedRatio === '9:16' ? '9:16' : '16:9',
@@ -214,7 +217,7 @@ const App: React.FC = () => {
         setIsKeySelected(false);
         await window.aistudio.openSelectKey();
       } else {
-        console.error("생성 실패", error);
+        console.error("Visual generation failed", error);
         alert("생성 도중 오류가 발생했습니다.");
       }
     } finally {
@@ -237,7 +240,7 @@ const App: React.FC = () => {
     const el = document.getElementById('card-to-save');
     if (el) html2canvas(el, { scale: 5, useCORS: true }).then((canvas: any) => {
       const link = document.createElement('a');
-      link.download = `Signature_Card_${Date.now()}.png`;
+      link.download = `BizMaster_Signature_${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     });
@@ -299,35 +302,46 @@ const App: React.FC = () => {
     };
   }, [currentMessage, selectedFont, isItalic, isBold, textAlign, fontSizeScale, letterSpacingScale, lineHeightScale, textColor, textOpacity, textShadowIntensity, textShadowColor]);
 
+  // API 키 선택 랜딩 페이지
   if (isKeySelected === false) {
     return (
       <div className="min-h-screen bg-[#010206] flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-xl space-y-10 animate-in fade-in zoom-in duration-700">
-          <div className="w-24 h-24 bg-amber-500 rounded-[35px] flex items-center justify-center text-black font-black text-4xl shadow-[0_0_50px_rgba(245,158,11,0.3)] mx-auto">M</div>
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white uppercase">시그니처 Lab <span className="text-amber-500">활성화</span></h1>
-            <p className="text-white/40 text-sm leading-relaxed max-w-md mx-auto">
-              비즈 마스터의 지능형 시각화 엔진을 사용하려면 API 키를 활성화해야 합니다. 
-              유료 결제가 설정된 프로젝트의 키를 선택하여 시작하세요.
+        <div className="max-w-xl space-y-12 animate-in fade-in zoom-in duration-1000">
+          <div className="w-28 h-28 bg-amber-500 rounded-[40px] flex items-center justify-center text-black font-black text-5xl shadow-[0_0_60px_rgba(245,158,11,0.4)] mx-auto border-4 border-white/20">M</div>
+          <div className="space-y-6">
+            <h1 className="text-5xl md:text-6xl font-black tracking-tight text-white uppercase leading-tight">시그니처 Lab <br/><span className="text-amber-500">엔진 활성화</span></h1>
+            <p className="text-white/40 text-sm md:text-base leading-relaxed max-w-md mx-auto font-medium">
+              비즈 마스터의 지능형 시각화 엔진을 사용하려면 API 키를 등록해야 합니다. 
+              유료 결제가 활성화된 구글 클라우드 프로젝트의 키를 선택하세요.
             </p>
           </div>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5 pt-4">
             <button 
               onClick={handleOpenKeySelector}
-              className="w-full py-6 bg-amber-500 text-black font-black uppercase tracking-[0.4em] text-sm rounded-3xl shadow-2xl active:scale-[0.98] transition-all hover:brightness-110"
+              className="w-full py-7 bg-amber-500 text-black font-black uppercase tracking-[0.5em] text-sm rounded-3xl shadow-2xl active:scale-[0.98] transition-all hover:bg-amber-400 hover:shadow-amber-500/20"
             >
-              API 키 등록 및 시작
+              API 키 등록하고 시작하기
             </button>
+            <a 
+              href="https://ai.google.dev/gemini-api/docs/billing" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[10px] text-white/20 uppercase tracking-[0.3em] font-bold hover:text-amber-500 transition-colors"
+            >
+              결제 및 API 키 설정 안내
+            </a>
           </div>
         </div>
       </div>
     );
   }
 
+  // 초기 로딩 스켈레톤
   if (isKeySelected === null) {
     return (
-      <div className="min-h-screen bg-[#010206] flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#010206] flex flex-col items-center justify-center gap-6">
+        <div className="w-16 h-16 border-4 border-amber-500/10 border-t-amber-500 rounded-full animate-spin" />
+        <div className="text-[10px] text-white/20 font-black uppercase tracking-widest animate-pulse">Initializing Signature System...</div>
       </div>
     );
   }
@@ -342,7 +356,7 @@ const App: React.FC = () => {
         <div className="flex items-center gap-3">
           <button onClick={() => window.aistudio.openSelectKey()} className="text-[9px] text-white/20 uppercase tracking-widest hover:text-white transition-colors mr-4">API 키 변경</button>
           {content && (
-            <button onClick={handleShare} className="px-5 py-2.5 bg-white/10 border border-white/10 rounded-full text-[10px] font-black hover:bg-white hover:text-black transition-all">모바일 전송</button>
+            <button onClick={handleShare} className="px-5 py-2.5 bg-white/10 border border-white/10 rounded-full text-[10px] font-black hover:bg-white hover:text-black transition-all">스마트폰 전송</button>
           )}
         </div>
       </header>
@@ -372,13 +386,13 @@ const App: React.FC = () => {
               ) : (
                 <div className="space-y-6 animate-in fade-in duration-500">
                   <div className="space-y-3"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">명언 주제</label><div className="grid grid-cols-3 gap-2">{(['리더십', '행동', '위로', '감사', '결단'] as const).map(q => <button key={q} onClick={() => setQuoteTheme(q as any)} className={`py-2.5 text-[10px] font-black rounded-xl border border-white/5 transition-all ${quoteTheme === q ? 'bg-white/10 text-amber-500 border-amber-500/50' : 'bg-black/20 text-white/20 hover:text-white/40'}`}>{q}</button>)}</div></div>
-                  <button onClick={handleFetchQuotes} disabled={isQuoteFetching} className="w-full py-3.5 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-amber-500 flex items-center justify-center gap-3 shadow-lg">{isQuoteFetching && <div className="w-3 h-3 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />}명언 생성 (5개 랜덤 추출)</button>
-                  {quoteOptions.length > 0 && <div className="space-y-2 max-h-64 overflow-y-auto pr-1 no-scrollbar border-t border-white/5 pt-4"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">명언 셀렉션</label>{quoteOptions.map((opt, idx) => <div key={idx} onClick={() => setSelectedQuote(opt)} className={`p-4 rounded-2xl border cursor-pointer transition-all text-[11px] leading-relaxed ${selectedQuote === opt ? 'bg-amber-500 text-black border-transparent shadow-xl' : 'bg-black/40 text-white/60 border-white/5 hover:border-white/20'}`}>"{opt.text}" <br/><span className="opacity-70 text-[10px] font-black mt-2 block">- {opt.author}</span></div>)}</div>}
+                  <button onClick={handleFetchQuotes} disabled={isQuoteFetching} className="w-full py-3.5 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-amber-500 flex items-center justify-center gap-3 shadow-lg">{isQuoteFetching && <div className="w-3 h-3 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />}명언 추출하기 (5개)</button>
+                  {quoteOptions.length > 0 && <div className="space-y-2 max-h-64 overflow-y-auto pr-1 no-scrollbar border-t border-white/5 pt-4"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">명언 리스트</label>{quoteOptions.map((opt, idx) => <div key={idx} onClick={() => setSelectedQuote(opt)} className={`p-4 rounded-2xl border cursor-pointer transition-all text-[11px] leading-relaxed ${selectedQuote === opt ? 'bg-amber-500 text-black border-transparent shadow-xl font-bold' : 'bg-black/40 text-white/60 border-white/5 hover:border-white/20'}`}>"{opt.text}" <br/><span className="opacity-70 text-[10px] font-black mt-2 block">- {opt.author}</span></div>)}</div>}
                 </div>
               )}
               <div className="space-y-4 pt-2 border-t border-white/5">
-                <div className="space-y-2"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">작성자(본인)</label><input value={senderName} onChange={(e) => setSenderName(e.target.value)} placeholder="성함 입력" className="w-full p-4 bg-black/60 border border-white/10 rounded-xl text-xs font-bold outline-none focus:border-amber-500 text-white shadow-inner" /></div>
-                <textarea value={userRequirement} onChange={(e) => setUserRequirement(e.target.value)} placeholder="추가 요청 사항 (예: 일출 배경, 더 웅장하게)" className="w-full p-5 bg-black/60 border border-white/10 rounded-2xl h-24 text-xs resize-none outline-none focus:border-amber-500 text-white/80 shadow-inner" />
+                <div className="space-y-2"><label className="text-[9px] text-white/30 uppercase tracking-widest ml-1">작성자 명의</label><input value={senderName} onChange={(e) => setSenderName(e.target.value)} placeholder="성함 입력" className="w-full p-4 bg-black/60 border border-white/10 rounded-xl text-xs font-bold outline-none focus:border-amber-500 text-white shadow-inner" /></div>
+                <textarea value={userRequirement} onChange={(e) => setUserRequirement(e.target.value)} placeholder="추가 요청 사항 (예: 일출 배경, 더 웅장한 자연)" className="w-full p-5 bg-black/60 border border-white/10 rounded-2xl h-24 text-xs resize-none outline-none focus:border-amber-500 text-white/80 shadow-inner" />
                 <div className="pt-4 flex flex-col gap-3">
                   <button 
                     onClick={handleGenerateCard} 
@@ -412,7 +426,7 @@ const App: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center p-4">
-                      <span className="text-[10px] text-white/30 font-black uppercase tracking-widest block">레퍼런스 분석</span>
+                      <span className="text-[10px] text-white/30 font-black uppercase tracking-widest block">레퍼런스 이미지 분석</span>
                       <span className="text-[8px] text-white/10 italic">이미지 업로드 또는 Ctrl+V</span>
                     </div>
                   )}
@@ -425,7 +439,7 @@ const App: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 gap-3">
                 <button onClick={() => handleGenerateVisual('image')} disabled={isVisualLoading} className="w-full py-4 bg-cyan-500 text-black text-[10px] font-black rounded-2xl hover:bg-cyan-400 transition-all shadow-xl flex items-center justify-center gap-2">{isVisualLoading ? <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : null}배경 이미지 생성</button>
-                <button onClick={() => handleGenerateVisual('video')} disabled={isVisualLoading} className="w-full py-4 border border-cyan-500 text-cyan-500 text-[10px] font-black rounded-2xl hover:bg-cyan-500 hover:text-black transition-all shadow-xl flex items-center justify-center gap-2">시네마틱 영상 생성</button>
+                <button onClick={() => handleGenerateVisual('video')} disabled={isVisualLoading} className="w-full py-4 border border-cyan-500 text-cyan-500 text-[10px] font-black rounded-2xl hover:bg-cyan-500 hover:text-black transition-all shadow-xl flex items-center justify-center gap-2">시네마틱 영상 렌더링</button>
               </div>
               {isVisualLoading && <p className="text-[9px] text-cyan-400 animate-pulse text-center font-bold px-4 leading-relaxed">{visualLoadMessage}</p>}
             </div>
@@ -436,7 +450,7 @@ const App: React.FC = () => {
           {!content ? (
             <div className="h-[750px] flex flex-col items-center justify-center bg-black/30 rounded-[70px] border border-white/5 border-dashed p-10 shadow-inner relative overflow-hidden group">
                <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-               <div className="text-[11px] font-black text-white/5 tracking-[1em] uppercase text-center leading-loose animate-pulse">Waiting for your leadership message...</div>
+               <div className="text-[11px] font-black text-white/5 tracking-[1.5em] uppercase text-center leading-loose animate-pulse">Waiting for your signature message...</div>
             </div>
           ) : (
             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
@@ -487,7 +501,7 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="space-y-4 pt-10 border-t border-white/5 relative">
-                  <div className="relative rounded-[50px] bg-black/90 p-2 border border-white/5 shadow-3xl overflow-hidden min-h-[400px]"><textarea ref={editorRef} value={currentMessage} onChange={(e) => setCurrentMessage(e.target.value)} className="w-full bg-transparent resize-none outline-none transition-all duration-300 overflow-hidden block scroll-smooth no-scrollbar" style={typographyStyles} spellCheck={false} placeholder="메시지 수정 시 전문가의 오토-레이아웃이 즉시 적용됩니다..." /></div>
+                  <div className="relative rounded-[50px] bg-black/90 p-2 border border-white/5 shadow-3xl overflow-hidden min-h-[400px]"><textarea ref={editorRef} value={currentMessage} onChange={(e) => setCurrentMessage(e.target.value)} className="w-full bg-transparent resize-none outline-none transition-all duration-300 overflow-hidden block scroll-smooth no-scrollbar" style={typographyStyles} spellCheck={false} placeholder="메시지를 수정하면 전문가의 오토-레이아웃이 즉시 적용됩니다..." /></div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-10"><button onClick={handleDownload} className="py-6 bg-gradient-to-r from-amber-600 to-amber-200 text-black font-black uppercase tracking-[0.6em] text-xs rounded-3xl shadow-2xl active:scale-[0.98] transition-all hover:brightness-110">High-Res Download</button><button onClick={handleShare} className="py-6 border border-white/10 text-white font-black uppercase tracking-[0.4em] text-[10px] rounded-3xl hover:bg-white/5 active:scale-[0.98] transition-all">스마트 공유하기</button></div>
                 </div>
               </div>
@@ -495,7 +509,7 @@ const App: React.FC = () => {
           )}
         </section>
       </main>
-      <footer className="py-20 px-10 border-t border-white/5 text-center opacity-10 select-none font-black tracking-[1.5em] uppercase leading-relaxed italic">Biz Master AI Studio • Signature Typography Engine v4.6</footer>
+      <footer className="py-20 px-10 border-t border-white/5 text-center opacity-10 select-none font-black tracking-[1.5em] uppercase leading-relaxed italic">Biz Master AI Studio • Signature Typography Engine v4.7</footer>
     </div>
   );
 };
