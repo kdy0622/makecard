@@ -66,6 +66,7 @@ const App: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
+  // API 키 등록 여부 체크 (최초 1회 진입점)
   useEffect(() => {
     const checkKey = async () => {
       try {
@@ -73,26 +74,26 @@ const App: React.FC = () => {
           const selected = await window.aistudio.hasSelectedApiKey();
           setIsKeySelected(selected);
         } else {
-          // Fallback if the environment is different, assume key is available through env
+          // 로컬 개발 환경 또는 특수 환경 대응
           setIsKeySelected(true);
         }
       } catch (e) {
-        console.error("Key selection check failed", e);
         setIsKeySelected(false);
       }
     };
     checkKey();
   }, []);
 
+  // API 키 선택 창 열기
   const handleOpenKeySelector = async () => {
     if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
       try {
         await window.aistudio.openSelectKey();
       } catch (e) {
-        console.error("Key selector error", e);
+        console.error("Key selection failed", e);
       }
     }
-    // Proceed to the app immediately after triggering the dialog to avoid race conditions
+    // 선택 후 레이스 컨디션을 방지하기 위해 즉시 메인 앱으로 진입 허용
     setIsKeySelected(true);
   };
 
@@ -170,7 +171,7 @@ const App: React.FC = () => {
       if (result.recommendedSeason) setDesignRequirement(result.recommendedSeason);
       setTextAlign('center'); 
     } catch (error) {
-      alert("메시지 디자인 도중 오류가 발생했습니다.");
+      alert("카드 생성 도중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -186,8 +187,8 @@ const App: React.FC = () => {
     const hasRef = !!referenceImage;
     setVisualLoadMessage(
       type === 'image' 
-        ? (hasRef ? '20년 베테랑 디자이너가 레퍼런스 이미지의 영웅적 구도를 분석하여 웅장한 대자연 속에 합성 중입니다...' : '베테랑 디자이너가 최적의 배경을 생성 중입니다...')
-        : (hasRef ? '이미지의 주인공을 감지하여 시네마틱한 무브먼트를 부여하고 있습니다...' : 'AI가 웅장한 시네마틱 영상을 렌더링 중입니다. 약 1분 정도 소요됩니다.')
+        ? (hasRef ? '20년 베테랑 디자이너가 레퍼런스의 피사체를 분석하여 웅장한 대자연을 생성 중입니다...' : '베테랑 디자이너가 최적의 배경을 생성 중입니다...')
+        : (hasRef ? '이미지의 영웅적 움직임을 감지하여 시네마틱 무브먼트를 부여하고 있습니다...' : 'AI가 웅장한 시네마틱 영상을 렌더링 중입니다. 약 1분 정도 소요됩니다.')
     );
     
     try {
@@ -217,7 +218,7 @@ const App: React.FC = () => {
         setIsKeySelected(false);
         await window.aistudio.openSelectKey();
       } else {
-        console.error("Visual generation failed", error);
+        console.error("생성 실패", error);
         alert("생성 도중 오류가 발생했습니다.");
       }
     } finally {
@@ -240,7 +241,7 @@ const App: React.FC = () => {
     const el = document.getElementById('card-to-save');
     if (el) html2canvas(el, { scale: 5, useCORS: true }).then((canvas: any) => {
       const link = document.createElement('a');
-      link.download = `BizMaster_Signature_${Date.now()}.png`;
+      link.download = `Signature_Card_${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     });
@@ -302,23 +303,23 @@ const App: React.FC = () => {
     };
   }, [currentMessage, selectedFont, isItalic, isBold, textAlign, fontSizeScale, letterSpacingScale, lineHeightScale, textColor, textOpacity, textShadowIntensity, textShadowColor]);
 
-  // API 키 선택 랜딩 페이지
+  // 최초 오픈 시 API 키 등록 랜딩 페이지
   if (isKeySelected === false) {
     return (
       <div className="min-h-screen bg-[#010206] flex flex-col items-center justify-center p-6 text-center">
         <div className="max-w-xl space-y-12 animate-in fade-in zoom-in duration-1000">
           <div className="w-28 h-28 bg-amber-500 rounded-[40px] flex items-center justify-center text-black font-black text-5xl shadow-[0_0_60px_rgba(245,158,11,0.4)] mx-auto border-4 border-white/20">M</div>
           <div className="space-y-6">
-            <h1 className="text-5xl md:text-6xl font-black tracking-tight text-white uppercase leading-tight">시그니처 Lab <br/><span className="text-amber-500">엔진 활성화</span></h1>
+            <h1 className="text-5xl md:text-6xl font-black tracking-tight text-white uppercase leading-tight">시그니처 Lab <br/><span className="text-amber-500">활성화 필요</span></h1>
             <p className="text-white/40 text-sm md:text-base leading-relaxed max-w-md mx-auto font-medium">
-              비즈 마스터의 지능형 시각화 엔진을 사용하려면 API 키를 등록해야 합니다. 
-              유료 결제가 활성화된 구글 클라우드 프로젝트의 키를 선택하세요.
+              비즈 마스터의 지능형 시각화 엔진을 시작하려면 API 키를 등록해야 합니다. <br/>
+              유료 결제가 설정된 구글 클라우드 프로젝트의 키를 선택하세요.
             </p>
           </div>
           <div className="flex flex-col gap-5 pt-4">
             <button 
               onClick={handleOpenKeySelector}
-              className="w-full py-7 bg-amber-500 text-black font-black uppercase tracking-[0.5em] text-sm rounded-3xl shadow-2xl active:scale-[0.98] transition-all hover:bg-amber-400 hover:shadow-amber-500/20"
+              className="w-full py-7 bg-amber-500 text-black font-black uppercase tracking-[0.5em] text-sm rounded-3xl shadow-2xl active:scale-[0.98] transition-all hover:bg-amber-400"
             >
               API 키 등록하고 시작하기
             </button>
@@ -326,9 +327,9 @@ const App: React.FC = () => {
               href="https://ai.google.dev/gemini-api/docs/billing" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-[10px] text-white/20 uppercase tracking-[0.3em] font-bold hover:text-amber-500 transition-colors"
+              className="text-[10px] text-white/20 uppercase tracking-[0.3em] font-bold hover:text-amber-500 transition-colors underline underline-offset-8"
             >
-              결제 및 API 키 설정 안내
+              결제 및 API 키 설정 안내 확인
             </a>
           </div>
         </div>
@@ -336,12 +337,12 @@ const App: React.FC = () => {
     );
   }
 
-  // 초기 로딩 스켈레톤
+  // 초기 상태 로딩 플레이스홀더
   if (isKeySelected === null) {
     return (
       <div className="min-h-screen bg-[#010206] flex flex-col items-center justify-center gap-6">
         <div className="w-16 h-16 border-4 border-amber-500/10 border-t-amber-500 rounded-full animate-spin" />
-        <div className="text-[10px] text-white/20 font-black uppercase tracking-widest animate-pulse">Initializing Signature System...</div>
+        <div className="text-[10px] text-white/20 font-black uppercase tracking-widest animate-pulse">Signature Lab Initializing...</div>
       </div>
     );
   }
@@ -354,9 +355,9 @@ const App: React.FC = () => {
           <h1 className="text-sm md:text-base font-black tracking-widest uppercase">비즈 마스터 <span className="text-amber-500">시그니처 Lab</span></h1>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={() => window.aistudio.openSelectKey()} className="text-[9px] text-white/20 uppercase tracking-widest hover:text-white transition-colors mr-4">API 키 변경</button>
+          <button onClick={() => window.aistudio.openSelectKey()} className="text-[9px] text-white/20 uppercase tracking-widest hover:text-white transition-colors mr-4">API 키 관리</button>
           {content && (
-            <button onClick={handleShare} className="px-5 py-2.5 bg-white/10 border border-white/10 rounded-full text-[10px] font-black hover:bg-white hover:text-black transition-all">스마트폰 전송</button>
+            <button onClick={handleShare} className="px-5 py-2.5 bg-white/10 border border-white/10 rounded-full text-[10px] font-black hover:bg-white hover:text-black transition-all">스마트 공유</button>
           )}
         </div>
       </header>
@@ -509,7 +510,7 @@ const App: React.FC = () => {
           )}
         </section>
       </main>
-      <footer className="py-20 px-10 border-t border-white/5 text-center opacity-10 select-none font-black tracking-[1.5em] uppercase leading-relaxed italic">Biz Master AI Studio • Signature Typography Engine v4.7</footer>
+      <footer className="py-20 px-10 border-t border-white/5 text-center opacity-10 select-none font-black tracking-[1.5em] uppercase leading-relaxed italic">Biz Master AI Studio • Signature Typography Engine v4.8</footer>
     </div>
   );
 };

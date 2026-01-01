@@ -116,22 +116,22 @@ export const generateCardImage = async (
     2. REFERENCE SYNTHESIS (CRITICAL):
        ${referenceImage ? `
        - ANALYZE the provided reference image.
-       - IDENTIFY the hero subject (e.g., an animal silhouette, a horse, a bird).
+       - IDENTIFY the hero subject (e.g., a horse, a bird, or a powerful silhouette).
        - REIMAGINE: Place this subject heroically within the "${imageType}" theme.
-       - EXAMPLE DESIGN: If the reference has a horse, create a majestic horse rearing up heroically on a mountain ridge, framed by a spectacular sunrise breaking through the clouds.
-       - COMPOSITION: Maintain the dynamic focal points and framing from the reference image.
-       ` : "Design a grand symbolic landscape that reflects the tone: " + messageContext}
+       - EXAMPLE: If there is a horse, show a majestic horse rearing up heroically on a mountain ridge, framed by a spectacular sunrise breaking through clouds.
+       - COMPOSITION: Match the dynamic framing and camera angles of the reference.
+       ` : "Design a grand symbolic landscape that reflects the message tone: " + messageContext}
 
     3. STYLE & LIGHTING:
        - Style: ${imageStylePreset || "Cinematic Masterpiece"}.
-       - Atmospheric Lighting: Use "God Rays", "Golden Hour", or "Volumetric Fog" to create depth.
-       - Quality: 8K feel, breathtaking contrast, ethereal presence.
+       - Atmosphere: Use "God Rays", "Golden Hour", or "Volumetric Fog" to create depth.
+       - Quality: 8K resolution feel, high dynamic range, breathtaking cinematic presence.
     
     4. DESIGN FINALIZATION:
-       - Balance space for typography overlay (ensure negative space).
-       - REMOVE ALL TEXT, LOGOS, AND WATERMARKS.
+       - Ensure significant "Negative Space" for clean typography overlay.
+       - REMOVE ALL TEXT, LOGOS, PEOPLE, AND WATERMARKS.
     
-    ${refinementText ? `Fine-tune request: ${refinementText}.` : ""}
+    ${refinementText ? `Artist's refinement feedback: ${refinementText}.` : ""}
   `;
 
   const contents: any = { parts: [{ text: promptText }] };
@@ -166,16 +166,16 @@ export const generateCardVideo = async (
     [20-YEAR VETERAN ART DIRECTOR - CINEMATIC VIDEO DIRECTION]
     
     - THEME: ${theme}.
-    - TYPE: Pure Majestic Nature (Strictly avoid buildings/structures if Nature is selected).
+    - TYPE: Pure Majestic Nature (Absolutely avoid buildings/structures if Nature is selected).
     
     ${referenceImage ? `
-    - HERO ANALYSIS: Detect the main creature or subject from the reference image.
+    - HERO ANALYSIS: Detect the main creature or subject (like a horse) from the reference image.
     - DYNAMIC EVOLUTION: Transform the static reference into a living masterpiece.
-    - MOTION: Slow, heroic cinematic movement. E.g., a horse's mane blowing in the wind as it stands atop a cliff against a rising sun.
-    - COMPOSITION: Keep the dramatic framing and camera angle of the reference.
-    ` : "Create an epic, moving nature landscape with deep atmosphere."}
+    - MOTION: Slow, heroic movement. E.g., a horse's mane blowing as it looks toward a misty sunrise.
+    - COMPOSITION: Preserve the powerful camera angle of the reference.
+    ` : "Create an epic, moving nature landscape with deep atmospheric transitions."}
     
-    - LIGHTING: Ethereal sunlight transitions and cinematic depth.
+    - LIGHTING: Cinematic light transitions and breathtaking depth.
     - NO TEXT, NO PEOPLE, NO MODERN ARTIFACTS.
   `;
 
